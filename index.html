@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Species 🌍 Occurrence Map</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;800&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous" />
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="p-2">
+    <div class="container d-flex justify-content-between align-items-center">
+      <!-- Info Button -->
+      <button class="btn btn-outline-light" data-bs-toggle="offcanvas" data-bs-target="#offcanvasInfo"
+        aria-controls="offcanvasInfo" aria-label="Information">
+        <i class="bi bi-info-circle"></i> Info
+      </button>
+      <!-- Title -->
+      <h1 class="m-0 text-center" id="page-title">
+        Biodiversity Unveiled: A Global Species Occurrence Map <span class="emoji"> 🌍</span>
+      </h1>
+      <!-- Help Button -->
+      <button class="btn btn-outline-light" data-bs-toggle="modal" data-bs-target="#helpModal" aria-label="Help">
+        <i class="bi bi-question-circle"></i> Help
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container-fluid my-3">
+    <!-- Filters and Search Row -->
+    <section class="row p-2 align-items-center text-dark filter-row" aria-label="Filters and Search">
+      <!-- Common Species Button -->
+      <div class="col-md-2 mb-2 mb-md-0">
+        <button class="btn btn-info btn w-100" data-bs-toggle="modal" data-bs-target="#commonSpeciesModal"
+          title="View common species for quick selection">
+          Quickly Visualize <br>Common Species </button>
+      </div>
+      <!-- Species Input -->
+      <div class="col-md-3 mb-2 mb-md-0">
+        <label for="speciesInput" class="form-label small">Input Species Scientific Name</label>
+        <input type="text" class="form-control" id="speciesInput" list="speciesSuggestions"
+          placeholder="e.g. Panthera onca" aria-label="Species scientific name" />
+        <datalist id="speciesSuggestions"></datalist>
+      </div>
+      <!-- Country Input -->
+      <div class="col-md-2 mb-2 mb-md-0">
+        <label for="countryInput" class="form-label small">Country Code</label>
+        <input type="text" class="form-control" id="countryInput" list="countrySuggestions" placeholder="e.g. US"
+          aria-label="Country Code" />
+        <datalist id="countrySuggestions"></datalist>
+      </div>
+      <!-- Year Range Input -->
+      <div class="col-md-2 mb-2 mb-md-0">
+        <label for="yearRange" class="form-label small">Year Range</label>
+        <input type="text" class="form-control" id="yearRange" placeholder="e.g. 2000,2023" aria-label="Year Range" />
+      </div>
+      <!-- Search & Locate Buttons -->
+      <div class="col-md-3 d-flex gap-2">
+        <button class="btn btn-success flex-grow-1" onclick="fetchSpecies()" aria-label="Search Species">
+          <i class="bi bi-search"></i> Search
+        </button>
+        <button class="btn btn-outline-primary flex-grow-1" onclick="locateUser()" aria-label="Locate Me"
+          title="Center map on your location">
+          <i class="bi bi-geo-alt-fill"></i> Locate Me
+        </button>
+      </div>
+    </section>
+
+    <!-- Map & Sidebar Row -->
+    <section class="row map-row">
+      <!-- Map Column -->
+      <div class="col-lg-8 position-relative p-0" aria-label="Map Container">
+        <div id="map"></div>
+        <!-- Overlay Buttons on Map -->
+        <div class="position-absolute" style="bottom: 22px; left: 200px; z-index: 1000;">
+          <button class="btn btn-warning btn" onclick="toggleHeatmap()" aria-label="Toggle Heatmap">
+            <i class="bi bi-fire"></i> Toggle Heatmap
+          </button>
+        </div>
+        <div class="position-absolute" style="bottom: 22px; right: 300px; z-index: 1000;">
+          <button class="btn btn-primary btn" onclick="generateChart()" aria-label="Generate Occurrence Bar Chart">
+            <i class="bi bi-bar-chart"></i> Generate Bar Graph
+          </button>
+        </div>
+        <!-- Basemap Selector -->
+        <div class="position-absolute top-0 start-0 p-2 basemap-container">
+          <select id="basemapSelector" class="form-select form-select-sm" onchange="changeBasemap(this.value)"
+            aria-label="Basemap selector">
+            <option value="osm">🗺️ OpenStreetMap</option>
+            <option value="light carto">☀️ Light Carto</option>
+            <option value="dark carto">🌑 Dark Carto</option>
+            <option value="terrain">🏔️ Terrain</option>
+          </select>
+        </div>
+        <!-- Heatmap Legend -->
+        <div id="heatmapLegend" class="heatmap-legend d-none">
+          <div><span style="background: yellow"></span> Low</div>
+          <div><span style="background: orange"></span> Medium</div>
+          <div><span style="background: red"></span> High</div>
+          <div><span style="background: purple"></span> Very High</div>
+        </div>
+        <!-- Loading Spinner -->
+        <div id="loadingSpinner" class="d-none">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+        </div>
+      </div>
+      <!-- Sidebar Column -->
+      <aside class="col-lg-4 bg-white p-3 sidebar" aria-label="Species Details">
+        <h4>📑 Species Information</h4>
+        <hr />
+        <div id="speciesDetails" class="text-dark text-center">
+          <p>Search for a species to see details here...</p>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center p-2">
+    <p class="m-0 text-light">New Maps Plus | Spring 2025</p>
+  </footer>
+
+  <!-- Offcanvas Info Component -->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasInfo" aria-labelledby="offcanvasInfoLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasInfoLabel">Information</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body">
+      <p>
+        This application shows GBIF species occurrences on an interactive map.
+        Use the search and filter options above to query species occurrence data from GBIF.
+        You can toggle between marker and heatmap views and generate a bar chart of occurrences by country.
+      </p>
+      <p>
+        For a quick tutorial, click the <strong>Help</strong> button in the header.
+      </p>
+      <hr>
+      <p>
+        <strong> Project:</strong> This project is part of an ongoing final project for New Maps Plus (Spring 2025), Department of Geography,
+        University of Kentucky.
+        The application leverages occurrence data from the <a href="https://www.gbif.org" target="_blank">Global
+          Biodiversity Information Facility (GBIF)</a>
+        and detailed species summaries from <a href="https://www.wikipedia.org" target="_blank">Wikipedia</a>.
+      </p>
+      <p>
+        <strong>Data Sources & APIs:</strong> The application uses the GBIF API for occurrence data and the Wikipedia
+        REST API for species details.
+        Additional country information is retrieved from the REST Countries API.
+      </p>
+      <hr>
+      <p>
+        <strong>Author:</strong> Binaya Adhikari
+      </p>
+      <p>
+        Learn more about my work:
+        <a href="https://github.com/binayaadh" target="_blank">GitHub</a>,
+        <a href="https://scholar.google.com/citations?user=By9S9uAAAAAJ&hl=en" target="_blank">Google Scholar</a>, and
+        <a href="https://www.researchgate.net/profile/Binaya-Adhikari-2/research" target="_blank">ResearchGate</a>.
+      </p>
+    </div>
+  </div>
+
+
+
+  <!-- Offcanvas Chart Component (from Bottom) -->
+  <div class="offcanvas offcanvas-bottom" tabindex="-1" id="offcanvasChart" aria-labelledby="offcanvasChartLabel"
+    aria-hidden="true">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title" id="offcanvasChartLabel">
+        Occurrence Bar Chart
+      </h5>
+      <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body" id="chartContainer">
+      <!-- Chart will be rendered here -->
+    </div>
+  </div>
+
+  <!-- Modal for Common Species -->
+  <div class="modal fade" id="commonSpeciesModal" tabindex="-1" aria-labelledby="commonSpeciesModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content modal-custom">
+        <div class="modal-header">
+          <h5 class="modal-title" id="commonSpeciesModalLabel">
+            Select a common species within these categories
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="commonSpeciesModalBody">
+          <!-- Category selection or species list will be injected here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="helpModalLabel">
+            Quick Start Guide
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>
+            <strong>Step 1:</strong> Begin by clicking the <em>"Quickly Visualize Common Species"</em> button.
+            This provides you with a quick selection of popular species to explore.
+          </p>
+          <p>
+            <strong>Step 2:</strong> If you prefer a custom search, fill in the manual filters:
+          </p>
+          <ul>
+            <li><strong>Species scientific name:</strong> Enter the species name (e.g., <em>Panthera onca</em>).</li>
+            <li><strong>Country Code:</strong> Input a country code (e.g., <em>US</em>).</li>
+            <li><strong>Basis of Record:</strong> Enter a filter value (e.g., <em>HUMAN_OBSERVATION</em>).</li>
+          </ul>
+          <p>
+            <strong>Step 3:</strong> Optionally, click <em>Locate Me</em> to center the map on your current location.
+          </p>
+          <p>
+            <strong>Step 4:</strong> Click <em>"Search"</em> to load the occurrence data on the map.
+          </p>
+          <p>
+            <strong>Step 5:</strong> Use the overlay buttons on the map to toggle the heatmap view or generate a bar
+            chart of occurrences.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- Leaflet Heat Plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/leaflet.heat/dist/leaflet-heat.js"></script>
+  <!-- Chart.js Library -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Script -->
+  <script src="script.js"></script>
+</body>
+
+</html>
