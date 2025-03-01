@@ -1,5 +1,7 @@
 # Biodiversity Unveiled: A Global Perspective on Species Occurrence
 
+The site is live at: [https://binayaadh.github.io/species-occurrence-maps/](https://binayaadh.github.io/species-occurrence-maps/)
+
 ## Overview
 
 **Biodiversity Unveiled** is an interactive web mapping application that visualizes global species occurrence data. Using GBIF’s Occurrence API as the primary data source and integrating species details from the Wikipedia API, this tool transforms raw occurrence records into a visually engaging narrative. The map is designed to support researchers, conservationists, policymakers, and educators in exploring global biodiversity patterns.
