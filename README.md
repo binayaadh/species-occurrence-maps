@@ -75,6 +75,3 @@ This project is part of an ongoing research initiative aimed at visualizing glob
   - [Google Scholar](https://scholar.google.com/citations?user=By9S9uAAAAAJ&hl=en)
   - [ResearchGate](https://www.researchgate.net/profile/Binaya-Adhikari-2/research)
 
----
-
-This README provides a comprehensive overview of the project, outlining the data sources, technology stack, and research objectives while emphasizing the use of JSON data (with no GeoJSON conversion). Feel free to adjust any sections to better suit your final project details.
