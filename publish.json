@@ -1,0 +1,8 @@
+{
+    "title": "Biodiversity Unveiled: A Global Species Occurrence Map",
+    "info": "This application shows GBIF species occurrences on an interactive map. Use the search and filter options above to query species occurrence data from GBIF. You can toggle between marker and heatmap views and generate a bar chart of occurrences by country.",
+    "coordinates": [38, -84.5],
+    "author": "Binaya Adhikari",
+    "link": "https://binayaadh.github.io/species-occurrence-maps/"
+  }
+  
